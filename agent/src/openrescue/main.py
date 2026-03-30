@@ -18,7 +18,32 @@ from openrescue.tracker import (
 logger = logging.getLogger(__name__)
 
 
+def _session_key(event):
+    """Return a hashable key representing the current window session."""
+    return (event.app_name, event.window_title, event.project)
+
+
+def _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname):
+    duration = session_polls * poll_interval
+    if duration <= 0:
+        return
+    category = categorize(session_event.app_name, session_event.window_title, config.categories)
+    shipper.push_session(session_event, hostname=hostname, duration=duration)
+    metrics.record_activity(
+        app=session_event.app_name,
+        project=session_event.project or "unknown",
+        category=category,
+        seconds=duration,
+    )
+
+
 def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
+    current_session = None  # (app_name, window_title, project)
+    session_event = None
+    session_polls = 0
+    was_idle = False
+    poll_interval = config.tracking.poll_interval_seconds
+
     iteration = 0
     while max_iterations is None or iteration < max_iterations:
         event = get_active_window()
@@ -29,22 +54,34 @@ def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
             project = get_project_from_title(event.window_title)
         event.project = project
 
-        category = categorize(event.app_name, event.window_title, config.categories)
+        is_idle = event.idle_seconds >= config.tracking.idle_threshold_seconds
+        key = _session_key(event)
 
-        if event.idle_seconds < config.tracking.idle_threshold_seconds:
-            shipper.push_event(event, hostname=hostname)
-            metrics.record_activity(
-                app=event.app_name,
-                project=event.project or "unknown",
-                category=category,
-                seconds=config.tracking.poll_interval_seconds,
-            )
+        # Flush previous session if window changed or transitioned to idle
+        if current_session is not None and (key != current_session or (is_idle and not was_idle)):
+            if not was_idle:
+                _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname)
+            current_session = None
 
+        # Start new session if not idle
+        if current_session is None and not is_idle:
+            current_session = key
+            session_event = event
+            session_polls = 0
+
+        if current_session is not None:
+            session_polls += 1
+
+        was_idle = is_idle
         metrics.record_idle(event.idle_seconds)
 
         iteration += 1
         if max_iterations is None or iteration < max_iterations:
-            time.sleep(config.tracking.poll_interval_seconds)
+            time.sleep(poll_interval)
+
+    # Flush final session
+    if current_session is not None and not was_idle:
+        _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname)
 
 
 def main():

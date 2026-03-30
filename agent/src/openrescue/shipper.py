@@ -12,7 +12,7 @@ class LokiShipper:
     def __init__(self, loki_url: str):
         self.push_url = f"{loki_url}/loki/api/v1/push"
 
-    def push_event(self, event: ActivityEvent, hostname: str) -> None:
+    def push_session(self, event: ActivityEvent, hostname: str, duration: float) -> None:
         labels = {
             "job": "openrescue",
             "hostname": hostname,
@@ -25,7 +25,7 @@ class LokiShipper:
             "window_title": event.window_title,
             "pid": event.pid,
             "cwd": event.cwd,
-            "idle_seconds": event.idle_seconds,
+            "duration_seconds": round(duration, 1),
         })
 
         payload = {
