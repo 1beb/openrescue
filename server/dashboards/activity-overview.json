@@ -15,9 +15,14 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range]))",
+          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range])) >= 600",
           "legendFormat": "{{app}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (app) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -44,9 +49,14 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range]))",
+          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range])) >= 600",
           "legendFormat": "{{project}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (project) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -73,9 +83,14 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range]))",
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range])) >= 600",
           "legendFormat": "{{category}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (category) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -138,9 +153,14 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range]))",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 600",
           "legendFormat": "{{window_title}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -167,9 +187,14 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range]))",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) >= 600",
           "legendFormat": "{{window_title}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -196,9 +221,14 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range]))",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) >= 600",
           "legendFormat": "{{window_title}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "legendFormat": "Other",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -252,5 +282,5 @@
   "timezone": "browser",
   "title": "Activity Overview",
   "uid": "openrescue-activity-overview",
-  "version": 2
+  "version": 3
 }
