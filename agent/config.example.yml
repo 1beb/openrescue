@@ -1,7 +1,7 @@
 # agent/config.example.yml
 server:
-  loki_url: "http://SERVER_HOST:3100"
-  mimir_url: "http://SERVER_HOST:9009"
+  loki_url: "http://your-server-ip:3100"
+  mimir_url: "http://your-server-ip:9009"
 
 tracking:
   poll_interval_seconds: 5
