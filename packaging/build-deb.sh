@@ -10,7 +10,7 @@ rm -rf build
 mkdir -p build/usr/lib/openrescue
 
 # Create venv with dependencies
-python3 -m venv build/usr/lib/openrescue/venv
+python3 -m venv --system-site-packages build/usr/lib/openrescue/venv
 build/usr/lib/openrescue/venv/bin/pip install ../agent/
 
 # Fix shebangs to point to installed location, not build dir

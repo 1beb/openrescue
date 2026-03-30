@@ -9,8 +9,8 @@ from openrescue.config import load_config
 from openrescue.metrics import MetricsCollector
 from openrescue.shipper import LokiShipper
 from openrescue.tracker import (
-    get_active_window_x11,
-    get_idle_time_x11,
+    get_active_window,
+    get_idle_time,
     get_project_from_cwd,
     get_project_from_title,
 )
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
     iteration = 0
     while max_iterations is None or iteration < max_iterations:
-        event = get_active_window_x11()
-        event.idle_seconds = get_idle_time_x11()
+        event = get_active_window()
+        event.idle_seconds = get_idle_time()
 
         project = get_project_from_cwd(event.cwd, config.projects.base_paths)
         if project is None:

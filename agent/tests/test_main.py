@@ -22,8 +22,8 @@ def test_tracking_loop_single_iteration(mocker):
         project=None,
     )
 
-    mock_get_window = mocker.patch("openrescue.main.get_active_window_x11", return_value=mock_event)
-    mock_get_idle = mocker.patch("openrescue.main.get_idle_time_x11", return_value=10.0)
+    mock_get_window = mocker.patch("openrescue.main.get_active_window", return_value=mock_event)
+    mock_get_idle = mocker.patch("openrescue.main.get_idle_time", return_value=10.0)
     mock_shipper = MagicMock()
     mock_metrics = MagicMock()
 

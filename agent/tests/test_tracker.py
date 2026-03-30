@@ -30,6 +30,19 @@ def test_get_project_from_cwd():
     assert get_project_from_cwd(None, ["~/projects"]) is None
 
 
+def test_detect_session_type(mocker):
+    from openrescue.tracker import detect_session_type
+
+    mocker.patch.dict(os.environ, {"XDG_SESSION_TYPE": "wayland", "XDG_CURRENT_DESKTOP": "ubuntu:GNOME"})
+    assert detect_session_type() == "gnome-wayland"
+
+    mocker.patch.dict(os.environ, {"XDG_SESSION_TYPE": "wayland", "XDG_CURRENT_DESKTOP": "sway"})
+    assert detect_session_type() == "wayland-unknown"
+
+    mocker.patch.dict(os.environ, {"XDG_SESSION_TYPE": "x11", "XDG_CURRENT_DESKTOP": "GNOME"})
+    assert detect_session_type() == "x11"
+
+
 def test_get_project_from_title():
     from openrescue.tracker import get_project_from_title
 
