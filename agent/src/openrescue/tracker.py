@@ -98,7 +98,7 @@ def get_active_window_gnome_wayland() -> ActivityEvent:
         desktop = Atspi.get_desktop(0)
         n_children = desktop.get_child_count()
 
-        # Collect all active windows, pick the topmost one
+        # Collect all visible windows, rank by layer then active state
         candidates = []
         for i in range(n_children):
             app = desktop.get_child_at_index(i)
@@ -109,18 +109,23 @@ def get_active_window_gnome_wayland() -> ActivityEvent:
             n_wins = app.get_child_count()
             for j in range(n_wins):
                 win = app.get_child_at_index(j)
-                if win and win.get_state_set().contains(Atspi.StateType.ACTIVE):
-                    layer = 0
-                    try:
-                        comp = win.get_component_iface()
-                        if comp:
-                            layer = int(comp.get_layer())
-                    except Exception:
-                        pass
-                    candidates.append((layer, app, win))
+                if not win:
+                    continue
+                states = win.get_state_set()
+                if not states.contains(Atspi.StateType.SHOWING):
+                    continue
+                layer = 0
+                try:
+                    comp = win.get_component_iface()
+                    if comp:
+                        layer = int(comp.get_layer())
+                except Exception:
+                    pass
+                active = states.contains(Atspi.StateType.ACTIVE)
+                candidates.append(((layer, active), app, win))
 
         if candidates:
-            # Highest layer = foreground window
+            # Highest layer + active state = foreground window
             candidates.sort(key=lambda x: x[0], reverse=True)
             _, app, win = candidates[0]
 
