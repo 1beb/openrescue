@@ -1,0 +1,26 @@
+# agent/config.example.yml
+server:
+  loki_url: "http://server:3100"
+  mimir_url: "http://server:9009"
+
+tracking:
+  poll_interval_seconds: 5
+  idle_threshold_seconds: 300
+
+projects:
+  base_paths:
+    - "~/projects"
+    - "~/work"
+
+categories:
+  productive:
+    - "code"
+    - "terminal"
+    - "github.com"
+  neutral:
+    - "slack"
+    - "email"
+  distracting:
+    - "reddit.com"
+    - "youtube.com"
+    - "twitter.com"

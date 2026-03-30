@@ -1,0 +1,26 @@
+[project]
+name = "openrescue"
+version = "0.1.0"
+description = "FOSS desktop activity tracker with LGTM backend"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "pyyaml>=6.0",
+    "prometheus-client>=0.21",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openrescue"]
+
+[project.scripts]
+openrescue = "openrescue.main:main"
