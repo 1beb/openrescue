@@ -75,15 +75,17 @@ def get_project_from_cwd(cwd: str | None, base_paths: list[str]) -> str | None:
     return None
 
 
-def get_project_from_pid(pid: int | None, base_paths: list[str]) -> str | None:
-    """Walk child processes of pid to find one with a CWD under a project base path."""
+def get_project_from_pid(pid: int | None, base_paths: list[str]) -> tuple[str | None, str | None]:
+    """Walk child processes of pid to find one with a CWD under a project base path.
+    Returns (project_name, cwd) or (None, None)."""
     if pid is None:
-        return None
+        return None, None
 
     # BFS through child processes
     to_visit = [pid]
     visited = set()
     best = None
+    best_cwd = None
 
     while to_visit:
         current = to_visit.pop(0)
@@ -96,6 +98,7 @@ def get_project_from_pid(pid: int | None, base_paths: list[str]) -> str | None:
             project = get_project_from_cwd(cwd, base_paths)
             if project:
                 best = project
+                best_cwd = cwd
         except OSError:
             pass
 
@@ -115,7 +118,7 @@ def get_project_from_pid(pid: int | None, base_paths: list[str]) -> str | None:
         except OSError:
             pass
 
-    return best
+    return best, best_cwd
 
 
 def get_project_from_title(title: str) -> str | None:

@@ -59,7 +59,9 @@ def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
 
         project = get_project_from_cwd(event.cwd, config.projects.base_paths)
         if project is None:
-            project = get_project_from_pid(event.pid, config.projects.base_paths)
+            project, child_cwd = get_project_from_pid(event.pid, config.projects.base_paths)
+            if child_cwd:
+                event.cwd = child_cwd
         if project is None:
             project = get_project_from_title(event.window_title)
         event.project = project
