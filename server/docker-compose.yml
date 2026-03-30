@@ -1,0 +1,44 @@
+services:
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    depends_on:
+      - loki
+      - mimir
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.4.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./config/loki-config.yml:/etc/loki/config.yml
+      - loki-data:/loki
+    restart: unless-stopped
+
+  mimir:
+    image: grafana/mimir:2.15.0
+    ports:
+      - "9009:9009"
+    command:
+      - -config.file=/etc/mimir/config.yml
+      - -target=all
+      - -server.http-listen-port=9009
+    volumes:
+      - ./config/mimir-config.yml:/etc/mimir/config.yml
+      - mimir-data:/data
+    restart: unless-stopped
+
+volumes:
+  grafana-data:
+  loki-data:
+  mimir-data:
