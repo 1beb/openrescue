@@ -15,7 +15,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (app) (increase(openrescue_active_seconds_total[1h]))",
+          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range]))",
           "legendFormat": "{{app}}",
           "refId": "A"
         }
@@ -44,7 +44,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (project) (increase(openrescue_active_seconds_total[1h]))",
+          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range]))",
           "legendFormat": "{{project}}",
           "refId": "A"
         }
@@ -73,7 +73,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[1h]))",
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range]))",
           "legendFormat": "{{category}}",
           "refId": "A"
         }
@@ -96,48 +96,13 @@
       }
     },
     {
-      "title": "Current Idle Time",
-      "type": "stat",
+      "title": "Daily Productivity Score",
+      "type": "gauge",
       "gridPos": { "h": 5, "w": 8, "x": 0, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "openrescue_idle_seconds",
-          "legendFormat": "Idle",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 300 },
-              { "color": "red", "value": 900 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "textMode": "auto"
-      }
-    },
-    {
-      "title": "Daily Productivity Score",
-      "type": "gauge",
-      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 9 },
-      "datasource": { "type": "prometheus", "uid": "Mimir" },
-      "targets": [
-        {
-          "expr": "sum(increase(openrescue_active_seconds_total{category=\"productive\"}[24h])) / sum(increase(openrescue_active_seconds_total[24h])) * 100",
+          "expr": "sum(increase(openrescue_active_seconds_total{category=\"productive\"}[$__range])) / sum(increase(openrescue_active_seconds_total[$__range])) * 100",
           "legendFormat": "Productivity %",
           "refId": "A"
         }
@@ -167,9 +132,96 @@
       }
     },
     {
+      "title": "Window Titles — Ptyxis",
+      "type": "piechart",
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 9 },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "targets": [
+        {
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range]))",
+          "legendFormat": "{{window_title}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie"
+      }
+    },
+    {
+      "title": "Window Titles — Browser",
+      "type": "piechart",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 9 },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "targets": [
+        {
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range]))",
+          "legendFormat": "{{window_title}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie"
+      }
+    },
+    {
+      "title": "Window Titles — Slack",
+      "type": "piechart",
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 18 },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "targets": [
+        {
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range]))",
+          "legendFormat": "{{window_title}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie"
+      }
+    },
+    {
       "title": "Activity Timeline",
       "type": "table",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 14 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 27 },
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
@@ -193,12 +245,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Activity Overview",
   "uid": "openrescue-activity-overview",
-  "version": 1
+  "version": 2
 }
