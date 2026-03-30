@@ -38,6 +38,20 @@ services:
       - mimir-data:/data
     restart: unless-stopped
 
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./config/alloy-config.alloy:/etc/alloy/config.alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+    depends_on:
+      - mimir
+    restart: unless-stopped
+
 volumes:
   grafana-data:
   loki-data:

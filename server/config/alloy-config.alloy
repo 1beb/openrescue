@@ -1,0 +1,16 @@
+prometheus.scrape "openrescue_agents" {
+  targets = [
+    {"__address__" = "AGENT_HOST_1:8000", "hostname" = "host1"},
+    {"__address__" = "AGENT_HOST_2:8000", "hostname" = "host2"},
+    {"__address__" = "AGENT_HOST_3:8000", "hostname" = "host3"},
+    {"__address__" = "AGENT_HOST_4:8000", "hostname" = "host4"},
+  ]
+  scrape_interval = "15s"
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
