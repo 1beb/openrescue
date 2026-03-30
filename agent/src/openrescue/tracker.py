@@ -75,6 +75,49 @@ def get_project_from_cwd(cwd: str | None, base_paths: list[str]) -> str | None:
     return None
 
 
+def get_project_from_pid(pid: int | None, base_paths: list[str]) -> str | None:
+    """Walk child processes of pid to find one with a CWD under a project base path."""
+    if pid is None:
+        return None
+
+    # BFS through child processes
+    to_visit = [pid]
+    visited = set()
+    best = None
+
+    while to_visit:
+        current = to_visit.pop(0)
+        if current in visited:
+            continue
+        visited.add(current)
+
+        try:
+            cwd = os.readlink(f"/proc/{current}/cwd")
+            project = get_project_from_cwd(cwd, base_paths)
+            if project:
+                best = project
+        except OSError:
+            pass
+
+        # Find children
+        try:
+            for entry in os.listdir("/proc"):
+                if not entry.isdigit():
+                    continue
+                try:
+                    with open(f"/proc/{entry}/stat") as f:
+                        stat = f.read()
+                    ppid = int(stat.split(")")[1].split()[1])
+                    if ppid == current:
+                        to_visit.append(int(entry))
+                except (OSError, ValueError, IndexError):
+                    pass
+        except OSError:
+            pass
+
+    return best
+
+
 def get_project_from_title(title: str) -> str | None:
     # VS Code pattern: "file - project - Visual Studio Code"
     vscode_match = re.match(r".+ - (.+) - Visual Studio Code", title)
@@ -90,52 +133,38 @@ def get_project_from_title(title: str) -> str | None:
 
 
 def get_active_window_gnome_wayland() -> ActivityEvent:
+    # Use OpenRescue GNOME Shell extension for accurate focus tracking
     try:
-        import gi
-        gi.require_version('Atspi', '2.0')
-        from gi.repository import Atspi
+        import json as _json
+        result = _run_cmd([
+            "gdbus", "call", "--session",
+            "--dest", "org.gnome.Shell",
+            "--object-path", "/org/openrescue/FocusTracker",
+            "--method", "org.openrescue.FocusTracker.GetFocusedWindow",
+        ])
+        # Output: ('{"title":"...","app":"...","pid":123}',)
+        json_str = result.strip("()',\n ")
+        data = _json.loads(json_str)
 
-        desktop = Atspi.get_desktop(0)
-        n_children = desktop.get_child_count()
+        app_name = data.get("app", "unknown")
+        title = data.get("title", "unknown")
+        pid = data.get("pid") or None
 
-        # Collect all ACTIVE windows — last one in iteration is most recently focused
-        last_active = None
-        for i in range(n_children):
-            app = desktop.get_child_at_index(i)
-            if not app:
-                continue
-            if app.get_name() == "gnome-shell":
-                continue
-            n_wins = app.get_child_count()
-            for j in range(n_wins):
-                win = app.get_child_at_index(j)
-                if not win:
-                    continue
-                if win.get_state_set().contains(Atspi.StateType.ACTIVE):
-                    last_active = (app, win)
+        cwd = None
+        if pid and pid > 0:
+            try:
+                cwd = os.readlink(f"/proc/{pid}/cwd")
+            except OSError:
+                pass
 
-        if last_active:
-            app, win = last_active
-
-            app_name = app.get_name() or "unknown"
-            title = win.get_name() or "unknown"
-            pid = app.get_process_id()
-
-            cwd = None
-            if pid and pid > 0:
-                try:
-                    cwd = os.readlink(f"/proc/{pid}/cwd")
-                except OSError:
-                    pass
-
-            return ActivityEvent(
-                timestamp=time.time(),
-                window_title=title,
-                app_name=app_name,
-                pid=pid if pid and pid > 0 else None,
-                cwd=cwd,
-                project=None,
-            )
+        return ActivityEvent(
+            timestamp=time.time(),
+            window_title=title,
+            app_name=app_name,
+            pid=pid if pid and pid > 0 else None,
+            cwd=cwd,
+            project=None,
+        )
     except Exception:
         pass
 

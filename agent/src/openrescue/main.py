@@ -12,15 +12,23 @@ from openrescue.tracker import (
     get_active_window,
     get_idle_time,
     get_project_from_cwd,
+    get_project_from_pid,
     get_project_from_title,
 )
 
 logger = logging.getLogger(__name__)
 
 
+def _normalize_title(title: str) -> str:
+    """Strip leading spinner/status characters that change frequently."""
+    import re
+    # Strip leading unicode spinners, braille patterns, emoji, whitespace
+    return re.sub(r'^[\s\u2800-\u28FF\u2700-\u27BF✳⠀-⣿]+', '', title).strip()
+
+
 def _session_key(event):
     """Return a hashable key representing the current window session."""
-    return (event.app_name, event.window_title, event.project)
+    return (event.app_name, _normalize_title(event.window_title), event.project)
 
 
 def _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname):
@@ -50,6 +58,8 @@ def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
         event.idle_seconds = get_idle_time()
 
         project = get_project_from_cwd(event.cwd, config.projects.base_paths)
+        if project is None:
+            project = get_project_from_pid(event.pid, config.projects.base_paths)
         if project is None:
             project = get_project_from_title(event.window_title)
         event.project = project
