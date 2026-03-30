@@ -15,12 +15,12 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range])) >= 600",
+          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range])) >= 300",
           "legendFormat": "{{app}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (app) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "expr": "sum(sum by (app) (increase(openrescue_active_seconds_total[$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -49,12 +49,12 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range])) >= 600",
+          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range])) >= 300",
           "legendFormat": "{{project}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (project) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "expr": "sum(sum by (project) (increase(openrescue_active_seconds_total[$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -83,12 +83,12 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range])) >= 600",
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range])) >= 300",
           "legendFormat": "{{category}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (category) (increase(openrescue_active_seconds_total[$__range])) < 600)",
+          "expr": "sum(sum by (category) (increase(openrescue_active_seconds_total[$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -153,12 +153,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 600",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -187,12 +187,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) >= 600",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -221,12 +221,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) >= 600",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) < 600)",
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
