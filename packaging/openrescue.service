@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenRescue Activity Tracker
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/openrescue/venv/bin/openrescue -c %h/.config/openrescue/config.yml
+Restart=on-failure
+RestartSec=10
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target
