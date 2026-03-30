@@ -75,17 +75,33 @@ def get_project_from_cwd(cwd: str | None, base_paths: list[str]) -> str | None:
     return None
 
 
-def get_project_from_pid(pid: int | None, base_paths: list[str]) -> tuple[str | None, str | None]:
-    """Walk child processes of pid to find one with a CWD under a project base path.
-    Returns (project_name, cwd) or (None, None)."""
-    if pid is None:
-        return None, None
+def _get_children(pid: int) -> list[int]:
+    """Get direct child PIDs of a process."""
+    children = []
+    try:
+        for entry in os.listdir("/proc"):
+            if not entry.isdigit():
+                continue
+            try:
+                with open(f"/proc/{entry}/stat") as f:
+                    stat = f.read()
+                ppid = int(stat.split(")")[1].split()[1])
+                if ppid == pid:
+                    children.append(int(entry))
+            except (OSError, ValueError, IndexError):
+                pass
+    except OSError:
+        pass
+    return children
 
-    # BFS through child processes
+
+def _walk_for_project(pid: int, base_paths: list[str]) -> tuple[str | None, str | None]:
+    """BFS from pid, return (project, cwd) of the most recently spawned match."""
     to_visit = [pid]
     visited = set()
     best = None
     best_cwd = None
+    best_pid = -1
 
     while to_visit:
         current = to_visit.pop(0)
@@ -96,29 +112,97 @@ def get_project_from_pid(pid: int | None, base_paths: list[str]) -> tuple[str | 
         try:
             cwd = os.readlink(f"/proc/{current}/cwd")
             project = get_project_from_cwd(cwd, base_paths)
-            if project:
+            if project and current > best_pid:
                 best = project
                 best_cwd = cwd
+                best_pid = current
         except OSError:
             pass
 
-        # Find children
-        try:
-            for entry in os.listdir("/proc"):
-                if not entry.isdigit():
-                    continue
-                try:
-                    with open(f"/proc/{entry}/stat") as f:
-                        stat = f.read()
-                    ppid = int(stat.split(")")[1].split()[1])
-                    if ppid == current:
-                        to_visit.append(int(entry))
-                except (OSError, ValueError, IndexError):
-                    pass
-        except OSError:
-            pass
+        to_visit.extend(_get_children(current))
 
     return best, best_cwd
+
+
+def get_project_from_pid(pid: int | None, base_paths: list[str]) -> tuple[str | None, str | None]:
+    """Find the project for a focused window PID by walking child processes.
+    For terminal emulators with multiple tabs, uses the foreground process group
+    of each tab's shell to find the active process tree.
+    Returns (project_name, cwd) or (None, None)."""
+    if pid is None:
+        return None, None
+
+    # Find immediate children (e.g. ptyxis-agent, then bash shells)
+    # Walk down to find shell processes with a tpgid that points to a project-aware process
+    shells = []
+    to_check = [pid]
+    visited = set()
+
+    # Find all bash/zsh/fish shells in the first 3 levels
+    for _ in range(3):
+        next_level = []
+        for p in to_check:
+            if p in visited:
+                continue
+            visited.add(p)
+            for child in _get_children(p):
+                try:
+                    with open(f"/proc/{child}/comm") as f:
+                        comm = f.read().strip()
+                    if comm in ("bash", "zsh", "fish", "sh"):
+                        shells.append(child)
+                    next_level.append(child)
+                except OSError:
+                    next_level.append(child)
+        to_check = next_level
+
+    if shells:
+        # For each shell, get its foreground process group leader (tpgid),
+        # walk from there to find a project, and use the max child starttime
+        # as a proxy for "most recently active tab"
+        best = None
+        best_cwd = None
+        best_starttime = -1
+        for shell_pid in shells:
+            try:
+                with open(f"/proc/{shell_pid}/stat") as f:
+                    stat = f.read()
+                tpgid = int(stat.split(")")[1].split()[5])
+                if tpgid <= 0:
+                    continue
+                project, cwd = _walk_for_project(tpgid, base_paths)
+                if not project:
+                    continue
+                # Find max starttime (field 22) among descendants
+                max_start = 0
+                to_visit = [tpgid]
+                seen = set()
+                while to_visit:
+                    p = to_visit.pop(0)
+                    if p in seen:
+                        continue
+                    seen.add(p)
+                    try:
+                        with open(f"/proc/{p}/stat") as f:
+                            s = f.read()
+                        starttime = int(s.split(")")[1].split()[19])
+                        if starttime > max_start:
+                            max_start = starttime
+                    except (OSError, ValueError, IndexError):
+                        pass
+                    to_visit.extend(_get_children(p))
+                if max_start > best_starttime:
+                    best = project
+                    best_cwd = cwd
+                    best_starttime = max_start
+            except (OSError, ValueError, IndexError):
+                pass
+
+        if best:
+            return best, best_cwd
+
+    # Fallback: simple walk from PID
+    return _walk_for_project(pid, base_paths)
 
 
 def get_project_from_title(title: str) -> str | None:
