@@ -1,0 +1,24 @@
+name: openrescue
+arch: amd64
+platform: linux
+version: "${VERSION}"
+maintainer: "OpenRescue"
+description: "FOSS desktop activity tracker with LGTM backend"
+homepage: "https://github.com/b/openrescue"
+license: MIT
+
+depends:
+  - python3
+  - xdotool
+  - xprintidle
+
+contents:
+  - src: ./build/usr/lib/openrescue
+    dst: /usr/lib/openrescue
+
+  - src: ./openrescue.service
+    dst: /usr/lib/systemd/user/openrescue.service
+
+scripts:
+  postinstall: ./postinst.sh
+  preremove: ./prerm.sh
