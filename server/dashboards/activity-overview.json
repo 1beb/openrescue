@@ -153,12 +153,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
-          "legendFormat": "{{window_title}}",
+          "expr": "sum by (window_title, project) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
+          "legendFormat": "{{project}}: {{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
+          "expr": "sum(sum by (window_title, project) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
