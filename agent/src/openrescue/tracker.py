@@ -98,33 +98,51 @@ def get_active_window_gnome_wayland() -> ActivityEvent:
         desktop = Atspi.get_desktop(0)
         n_children = desktop.get_child_count()
 
+        # Collect all active windows, pick the topmost one
+        candidates = []
         for i in range(n_children):
             app = desktop.get_child_at_index(i)
             if not app:
+                continue
+            if app.get_name() == "gnome-shell":
                 continue
             n_wins = app.get_child_count()
             for j in range(n_wins):
                 win = app.get_child_at_index(j)
                 if win and win.get_state_set().contains(Atspi.StateType.ACTIVE):
-                    app_name = app.get_name() or "unknown"
-                    title = win.get_name() or "unknown"
-                    pid = app.get_process_id()
+                    layer = 0
+                    try:
+                        comp = win.get_component_iface()
+                        if comp:
+                            layer = int(comp.get_layer())
+                    except Exception:
+                        pass
+                    candidates.append((layer, app, win))
 
-                    cwd = None
-                    if pid and pid > 0:
-                        try:
-                            cwd = os.readlink(f"/proc/{pid}/cwd")
-                        except OSError:
-                            pass
+        if candidates:
+            # Highest layer = foreground window
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            _, app, win = candidates[0]
 
-                    return ActivityEvent(
-                        timestamp=time.time(),
-                        window_title=title,
-                        app_name=app_name,
-                        pid=pid if pid and pid > 0 else None,
-                        cwd=cwd,
-                        project=None,
-                    )
+            app_name = app.get_name() or "unknown"
+            title = win.get_name() or "unknown"
+            pid = app.get_process_id()
+
+            cwd = None
+            if pid and pid > 0:
+                try:
+                    cwd = os.readlink(f"/proc/{pid}/cwd")
+                except OSError:
+                    pass
+
+            return ActivityEvent(
+                timestamp=time.time(),
+                window_title=title,
+                app_name=app_name,
+                pid=pid if pid and pid > 0 else None,
+                cwd=cwd,
+                project=None,
+            )
     except Exception:
         pass
 
