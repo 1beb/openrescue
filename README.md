@@ -1,6 +1,8 @@
 # OpenRescue
 
-A FOSS alternative to RescueTime. Tracks desktop activity and ships data to a centralized LGTM stack (Loki, Grafana, Mimir) over Tailscale.
+Rescuetime is an excellent piece of software for habit/usage tracking, however, they unforunately stopped supportng Linux a few years ago. This is a FOSS alternative to RescueTime, specifically for Ubuntu on Wayland. It tracks activity and ships data to a centralized LGTM stack (Loki, Grafana, Mimir) over Tailscale.
+
+Shamelessly, I'm using this software to get familiar with the LGTM stack but I think it's an excellent fit for this use case.
 
 ## How it works
 
