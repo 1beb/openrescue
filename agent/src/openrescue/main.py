@@ -43,6 +43,8 @@ def _flush_session(session_event, session_polls, poll_interval, shipper, metrics
         category=category,
         seconds=duration,
     )
+    pulse = metrics.calculate_pulse()
+    metrics.record_pulse(pulse)
 
 
 def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):

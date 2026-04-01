@@ -80,3 +80,32 @@ def test_project_detected_from_cwd(mocker):
     assert mock_shipper.push_session.call_count == 1
     pushed_event = mock_shipper.push_session.call_args[0][0]
     assert pushed_event.project == "openrescue"
+
+
+def test_pulse_recorded_on_session_flush(mocker):
+    mocker.patch("time.sleep")
+    events = [
+        ActivityEvent(time.time(), "main.py - VS Code", "Code",
+                      1234, "/home/b/projects/openrescue", None),
+        ActivityEvent(time.time(), "Google - Firefox", "Firefox",
+                      5678, "/home/b", None),
+    ]
+    call_count = [0]
+
+    def mock_get_window():
+        e = events[call_count[0]]
+        call_count[0] += 1
+        return e
+
+    mocker.patch("openrescue.main.get_active_window", side_effect=mock_get_window)
+    mocker.patch("openrescue.main.get_idle_time", return_value=0.0)
+
+    mock_shipper = MagicMock()
+    mock_metrics = MagicMock()
+    mock_metrics.calculate_pulse.return_value = 75.0
+
+    config = _make_config()
+    tracking_loop(config, mock_shipper, mock_metrics, hostname="test", max_iterations=2)
+
+    mock_metrics.calculate_pulse.assert_called()
+    mock_metrics.record_pulse.assert_called_with(75.0)
