@@ -4,6 +4,7 @@ import platform
 import time
 from pathlib import Path
 
+from openrescue.buffer import SessionBuffer
 from openrescue.categorizer import categorize
 from openrescue.config import load_config
 from openrescue.metrics import MetricsCollector
@@ -125,7 +126,7 @@ def tracking_loop(config, shipper, metrics, hostname, max_iterations=None, buffe
 
     # Flush final session
     if current_session is not None and not was_idle:
-        _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname)
+        _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname, buffer=buffer)
 
 
 def main():
@@ -152,8 +153,14 @@ def main():
     metrics.start_server(args.metrics_port)
     hostname = platform.node()
 
+    db_path = Path.home() / ".local" / "share" / "openrescue" / "buffer.db"
+    buffer = SessionBuffer(db_path)
+    pruned = buffer.prune(max_age_days=10)
+    if pruned:
+        logger.info("Pruned %d old shipped records from buffer", pruned)
+
     logger.info("OpenRescue started on %s, shipping to %s", hostname, config.server.loki_url)
-    tracking_loop(config, shipper, metrics, hostname)
+    tracking_loop(config, shipper, metrics, hostname, buffer=buffer)
 
 
 if __name__ == "__main__":
