@@ -31,12 +31,27 @@ def _session_key(event):
     return (event.app_name, _normalize_title(event.window_title), event.project)
 
 
-def _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname):
+def _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname, buffer=None):
     duration = session_polls * poll_interval
     if duration <= 0:
         return
     category = categorize(session_event.app_name, session_event.window_title, config.categories)
-    shipper.push_session(session_event, hostname=hostname, duration=duration)
+
+    if buffer is not None:
+        buffer.insert({
+            "timestamp": session_event.timestamp,
+            "app_name": session_event.app_name,
+            "window_title": session_event.window_title,
+            "pid": session_event.pid,
+            "cwd": session_event.cwd,
+            "project": session_event.project,
+            "hostname": hostname,
+            "duration": duration,
+            "category": category,
+        })
+    else:
+        shipper.push_session(session_event, hostname=hostname, duration=duration)
+
     metrics.record_activity(
         app=session_event.app_name,
         project=session_event.project or "unknown",
@@ -46,8 +61,23 @@ def _flush_session(session_event, session_polls, poll_interval, shipper, metrics
     pulse = metrics.calculate_pulse()
     metrics.record_pulse(pulse)
 
+    if buffer is not None:
+        _ship_buffered(buffer, shipper)
 
-def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
+
+def _ship_buffered(buffer, shipper):
+    unshipped = buffer.get_unshipped(limit=100)
+    shipped_ids = []
+    for record in unshipped:
+        if shipper.push_from_buffer(record):
+            shipped_ids.append(record["id"])
+        else:
+            break
+    if shipped_ids:
+        buffer.mark_shipped(shipped_ids)
+
+
+def tracking_loop(config, shipper, metrics, hostname, max_iterations=None, buffer=None):
     current_session = None  # (app_name, window_title, project)
     session_event = None
     session_polls = 0
@@ -74,7 +104,7 @@ def tracking_loop(config, shipper, metrics, hostname, max_iterations=None):
         # Flush previous session if window changed or transitioned to idle
         if current_session is not None and (key != current_session or (is_idle and not was_idle)):
             if not was_idle:
-                _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname)
+                _flush_session(session_event, session_polls, poll_interval, shipper, metrics, config, hostname, buffer=buffer)
             current_session = None
 
         # Start new session if not idle
