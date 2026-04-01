@@ -69,3 +69,64 @@ def test_get_unshipped_returns_empty_when_all_shipped(tmp_path):
     buf.mark_shipped([row_id])
     unshipped = buf.get_unshipped()
     assert len(unshipped) == 0
+
+
+def test_prune_removes_old_shipped_records(tmp_path):
+    db_path = tmp_path / "buffer.db"
+    buf = SessionBuffer(db_path)
+
+    # Insert a record with a timestamp 15 days ago
+    old_ts = time.time() - (15 * 86400)
+    old_id = buf.insert({
+        "timestamp": old_ts,
+        "app_name": "OldApp",
+        "window_title": "old title",
+        "pid": 1000,
+        "cwd": "/home/b",
+        "project": None,
+        "hostname": "testhost",
+        "duration": 10.0,
+        "category": "productive",
+    })
+    buf.mark_shipped([old_id])
+
+    # Insert a recent shipped record
+    recent_id = buf.insert({
+        "timestamp": time.time(),
+        "app_name": "RecentApp",
+        "window_title": "new title",
+        "pid": 2000,
+        "cwd": "/home/b",
+        "project": None,
+        "hostname": "testhost",
+        "duration": 10.0,
+        "category": "productive",
+    })
+    buf.mark_shipped([recent_id])
+
+    # Insert an old unshipped record (should NOT be pruned)
+    buf.insert({
+        "timestamp": old_ts,
+        "app_name": "OldUnshipped",
+        "window_title": "old unshipped",
+        "pid": 3000,
+        "cwd": "/home/b",
+        "project": None,
+        "hostname": "testhost",
+        "duration": 10.0,
+        "category": "productive",
+    })
+
+    pruned = buf.prune(max_age_days=10)
+
+    # Only the old shipped record should be removed
+    assert pruned == 1
+
+    # Recent shipped record still exists
+    cursor = buf._conn.execute("SELECT count(*) FROM sessions WHERE shipped = 1")
+    assert cursor.fetchone()[0] == 1
+
+    # Old unshipped record still exists
+    unshipped = buf.get_unshipped()
+    assert len(unshipped) == 1
+    assert unshipped[0]["app_name"] == "OldUnshipped"

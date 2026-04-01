@@ -56,5 +56,15 @@ class SessionBuffer:
         )
         self._conn.commit()
 
+    def prune(self, max_age_days: int = 10) -> int:
+        import time
+        cutoff = time.time() - (max_age_days * 86400)
+        cursor = self._conn.execute(
+            "DELETE FROM sessions WHERE shipped = 1 AND timestamp < ?",
+            (cutoff,),
+        )
+        self._conn.commit()
+        return cursor.rowcount
+
     def close(self):
         self._conn.close()
