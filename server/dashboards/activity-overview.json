@@ -15,7 +15,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum(increase(openrescue_active_seconds_total[$__range]))",
+          "expr": "sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[$__range]))",
           "refId": "A"
         }
       ],
@@ -38,7 +38,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "(\n  (sum(increase(openrescue_active_seconds_total{category=\"very_productive\"}[$__range])) * 4\n  + sum(increase(openrescue_active_seconds_total{category=\"productive\"}[$__range])) * 3\n  + sum(increase(openrescue_active_seconds_total{category=\"uncategorized\"}[$__range])) * 2\n  + sum(increase(openrescue_active_seconds_total{category=\"distracting\"}[$__range])) * 1\n  + sum(increase(openrescue_active_seconds_total{category=\"very_distracting\"}[$__range])) * 0)\n  /\n  (sum(increase(openrescue_active_seconds_total[$__range])) * 4)\n) * 100",
+          "expr": "(\n  (sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"very_productive\"}[$__range])) * 4\n  + sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"productive\"}[$__range])) * 3\n  + sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"uncategorized\"}[$__range])) * 2\n  + sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"distracting\"}[$__range])) * 1\n  + sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"very_distracting\"}[$__range])) * 0)\n  /\n  (sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[$__range])) * 4)\n) * 100",
           "refId": "A"
         }
       ],
@@ -74,7 +74,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range]))",
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[$__range]))",
           "refId": "A"
         }
       ],
@@ -105,7 +105,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[1d]))",
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[1d]))",
           "legendFormat": "{{category}}",
           "refId": "A"
         }
@@ -137,7 +137,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "(sum(increase(openrescue_active_seconds_total{category=~\"very_productive|productive\"}[$__range])) / sum(increase(openrescue_active_seconds_total[$__range]))) * 100",
+          "expr": "(sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=~\"very_productive|productive\"}[$__range])) / sum(increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[$__range]))) * 100",
           "refId": "A"
         }
       ],
@@ -168,7 +168,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "topk(20, sum by (app, category) (increase(openrescue_active_seconds_total[$__range])))",
+          "expr": "topk(20, sum by (app, category) (increase(openrescue_active_seconds_total{instance=~\"$hostname.*\"}[$__range])))",
           "legendFormat": "{{app}}",
           "refId": "A",
           "format": "table",
@@ -210,7 +210,7 @@
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "topk(20, sum by (app) (increase(openrescue_active_seconds_total{category=\"uncategorized\"}[$__range])))",
+          "expr": "topk(20, sum by (app) (increase(openrescue_active_seconds_total{instance=~\"$hostname.*\", category=\"uncategorized\"}[$__range])))",
           "legendFormat": "{{app}}",
           "refId": "A",
           "format": "table",
@@ -234,12 +234,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title, project) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
+          "expr": "sum by (window_title, project) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{project}}: {{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title, project) (sum_over_time({job=\"openrescue\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
+          "expr": "sum(sum by (window_title, project) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*[Pp]tyxis.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -265,12 +265,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) >= 300",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) < 300)",
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*(firefox|Chrome|chrom).*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -296,12 +296,12 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
+          "expr": "sum by (window_title) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) >= 300",
           "legendFormat": "{{window_title}}",
           "refId": "A"
         },
         {
-          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
+          "expr": "sum(sum by (window_title) (sum_over_time({job=\"openrescue\", hostname=~\"$hostname\", app=~\".*[Ss]lack.*\"} | json | unwrap duration_seconds [$__range])) < 300)",
           "legendFormat": "Other",
           "refId": "B"
         }
@@ -327,7 +327,7 @@
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
-          "expr": "{job=\"openrescue\"} | json",
+          "expr": "{job=\"openrescue\", hostname=~\"$hostname\"} | json",
           "refId": "A"
         }
       ],
@@ -343,7 +343,29 @@
   "schemaVersion": 39,
   "tags": ["openrescue"],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": { "type": "prometheus", "uid": "Mimir" },
+        "definition": "label_values(openrescue_active_seconds_total, instance)",
+        "includeAll": true,
+        "name": "hostname",
+        "label": "Device",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(openrescue_active_seconds_total, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/([^:]+).*/",
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now/d",
