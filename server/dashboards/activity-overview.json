@@ -9,20 +9,14 @@
   "links": [],
   "panels": [
     {
-      "title": "Time by Application",
-      "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 0 },
+      "title": "Time Logged",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum by (app) (increase(openrescue_active_seconds_total[$__range])) >= 300",
-          "legendFormat": "{{app}}",
+          "expr": "sum(increase(openrescue_active_seconds_total[$__range]))",
           "refId": "A"
-        },
-        {
-          "expr": "sum(sum by (app) (increase(openrescue_active_seconds_total[$__range])) < 300)",
-          "legendFormat": "Other",
-          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -34,97 +28,23 @@
       "options": {
         "reduceOptions": {
           "calcs": ["lastNotNull"]
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "right"
-        },
-        "pieType": "pie"
-      }
-    },
-    {
-      "title": "Time by Project",
-      "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "Mimir" },
-      "targets": [
-        {
-          "expr": "sum by (project) (increase(openrescue_active_seconds_total[$__range])) >= 300",
-          "legendFormat": "{{project}}",
-          "refId": "A"
-        },
-        {
-          "expr": "sum(sum by (project) (increase(openrescue_active_seconds_total[$__range])) < 300)",
-          "legendFormat": "Other",
-          "refId": "B"
         }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "right"
-        },
-        "pieType": "pie"
       }
     },
     {
-      "title": "Time by Category",
-      "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "Mimir" },
-      "targets": [
-        {
-          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range])) >= 300",
-          "legendFormat": "{{category}}",
-          "refId": "A"
-        },
-        {
-          "expr": "sum(sum by (category) (increase(openrescue_active_seconds_total[$__range])) < 300)",
-          "legendFormat": "Other",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "right"
-        },
-        "pieType": "pie"
-      }
-    },
-    {
-      "title": "Daily Productivity Score",
+      "title": "Productivity Pulse",
       "type": "gauge",
-      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 9 },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Mimir" },
       "targets": [
         {
-          "expr": "sum(increase(openrescue_active_seconds_total{category=\"productive\"}[$__range])) / sum(increase(openrescue_active_seconds_total[$__range])) * 100",
-          "legendFormat": "Productivity %",
+          "expr": "(\n  (sum(increase(openrescue_active_seconds_total{category=\"very_productive\"}[$__range])) * 4\n  + sum(increase(openrescue_active_seconds_total{category=\"productive\"}[$__range])) * 3\n  + sum(increase(openrescue_active_seconds_total{category=\"uncategorized\"}[$__range])) * 2\n  + sum(increase(openrescue_active_seconds_total{category=\"distracting\"}[$__range])) * 1\n  + sum(increase(openrescue_active_seconds_total{category=\"very_distracting\"}[$__range])) * 0)\n  /\n  (sum(increase(openrescue_active_seconds_total[$__range])) * 4)\n) * 100",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "none",
           "min": 0,
           "max": 100,
           "thresholds": {
@@ -139,17 +59,178 @@
         "overrides": []
       },
       "options": {
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
         "reduceOptions": {
           "calcs": ["lastNotNull"]
+        }
+      }
+    },
+    {
+      "title": "Category Breakdown",
+      "type": "piechart",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Mimir" },
+      "targets": [
+        {
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "very_productive" }, "properties": [{ "id": "color", "value": { "fixedColor": "#2563a0", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "productive" }, "properties": [{ "id": "color", "value": { "fixedColor": "#5b9bd5", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "uncategorized" }, "properties": [{ "id": "color", "value": { "fixedColor": "#808080", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "distracting" }, "properties": [{ "id": "color", "value": { "fixedColor": "#e8913a", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "very_distracting" }, "properties": [{ "id": "color", "value": { "fixedColor": "#d94040", "mode": "fixed" } }] }
+        ]
+      },
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      }
+    },
+    {
+      "title": "Time by Day",
+      "type": "barchart",
+      "gridPos": { "h": 9, "w": 18, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Mimir" },
+      "targets": [
+        {
+          "expr": "sum by (category) (increase(openrescue_active_seconds_total[1d]))",
+          "legendFormat": "{{category}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "stacking": {
+              "mode": "normal"
+            },
+            "barAlignment": 0
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "very_productive" }, "properties": [{ "id": "color", "value": { "fixedColor": "#2563a0", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "productive" }, "properties": [{ "id": "color", "value": { "fixedColor": "#5b9bd5", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "uncategorized" }, "properties": [{ "id": "color", "value": { "fixedColor": "#808080", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "distracting" }, "properties": [{ "id": "color", "value": { "fixedColor": "#e8913a", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "very_distracting" }, "properties": [{ "id": "color", "value": { "fixedColor": "#d94040", "mode": "fixed" } }] }
+        ]
+      },
+      "options": {}
+    },
+    {
+      "title": "Productive Time %",
+      "type": "stat",
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Mimir" },
+      "targets": [
+        {
+          "expr": "(sum(increase(openrescue_active_seconds_total{category=~\"very_productive|productive\"}[$__range])) / sum(increase(openrescue_active_seconds_total[$__range]))) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 40 },
+              { "color": "green", "value": 70 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        }
+      }
+    },
+    {
+      "title": "Top Applications",
+      "type": "table",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "Mimir" },
+      "targets": [
+        {
+          "expr": "topk(20, sum by (app, category) (increase(openrescue_active_seconds_total[$__range])))",
+          "legendFormat": "{{app}}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true
+            },
+            "renameByName": {
+              "app": "App",
+              "category": "Category",
+              "Value": "Time"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "title": "Uncategorized Apps (Triage Queue)",
+      "type": "table",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "Mimir" },
+      "targets": [
+        {
+          "expr": "topk(20, sum by (app) (increase(openrescue_active_seconds_total{category=\"uncategorized\"}[$__range])))",
+          "legendFormat": "{{app}}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
       }
     },
     {
       "title": "Window Titles — Ptyxis",
       "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 9 },
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 23 },
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
@@ -170,20 +251,17 @@
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
+        "pieType": "pie",
         "legend": {
           "displayMode": "list",
           "placement": "bottom"
-        },
-        "pieType": "pie"
+        }
       }
     },
     {
       "title": "Window Titles — Browser",
       "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 9 },
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 23 },
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
@@ -204,20 +282,17 @@
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
+        "pieType": "pie",
         "legend": {
           "displayMode": "list",
           "placement": "bottom"
-        },
-        "pieType": "pie"
+        }
       }
     },
     {
       "title": "Window Titles — Slack",
       "type": "piechart",
-      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 18 },
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 23 },
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
@@ -238,20 +313,17 @@
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"]
-        },
+        "pieType": "pie",
         "legend": {
           "displayMode": "list",
           "placement": "bottom"
-        },
-        "pieType": "pie"
+        }
       }
     },
     {
       "title": "Activity Timeline",
       "type": "table",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 27 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 32 },
       "datasource": { "type": "loki", "uid": "Loki" },
       "targets": [
         {
@@ -264,8 +336,7 @@
         "overrides": []
       },
       "options": {
-        "showHeader": true,
-        "sortBy": []
+        "showHeader": true
       }
     }
   ],
@@ -275,12 +346,21 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now/d",
     "to": "now"
   },
-  "timepicker": {},
+  "timepicker": {
+    "hidden": false,
+    "quick_ranges": [
+      { "display": "Today so far", "from": "now/d", "to": "now" },
+      { "display": "This week so far", "from": "now/w", "to": "now" },
+      { "display": "This month so far", "from": "now/M", "to": "now" },
+      { "display": "This year so far", "from": "now/y", "to": "now" },
+      { "display": "All time", "from": "now-10y", "to": "now" }
+    ]
+  },
   "timezone": "browser",
   "title": "Activity Overview",
   "uid": "openrescue-activity-overview",
-  "version": 3
+  "version": 4
 }
