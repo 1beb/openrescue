@@ -23,9 +23,10 @@ class ProjectsConfig:
 
 @dataclass
 class CategoriesConfig:
+    very_productive: list[str] = field(default_factory=list)
     productive: list[str] = field(default_factory=list)
-    neutral: list[str] = field(default_factory=list)
     distracting: list[str] = field(default_factory=list)
+    very_distracting: list[str] = field(default_factory=list)
 
 
 @dataclass

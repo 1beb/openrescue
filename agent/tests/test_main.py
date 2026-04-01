@@ -10,7 +10,7 @@ def _make_config(**overrides):
         server=ServerConfig(loki_url="http://localhost:3100", mimir_url="http://localhost:9009"),
         tracking=TrackingConfig(poll_interval_seconds=5, **overrides),
         projects=ProjectsConfig(base_paths=["~/projects"]),
-        categories=CategoriesConfig(productive=["code"], neutral=[], distracting=[]),
+        categories=CategoriesConfig(very_productive=["code"], productive=[], distracting=[], very_distracting=[]),
     )
 
 

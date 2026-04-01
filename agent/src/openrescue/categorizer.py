@@ -16,6 +16,10 @@ def _matches(keyword: str, searchable: str) -> bool:
 def categorize(app_name: str, window_title: str, categories: CategoriesConfig) -> str:
     searchable = f"{app_name} {window_title}".lower()
 
+    for keyword in categories.very_productive:
+        if _matches(keyword, searchable):
+            return "very_productive"
+
     for keyword in categories.productive:
         if _matches(keyword, searchable):
             return "productive"
@@ -24,8 +28,8 @@ def categorize(app_name: str, window_title: str, categories: CategoriesConfig) -
         if _matches(keyword, searchable):
             return "distracting"
 
-    for keyword in categories.neutral:
+    for keyword in categories.very_distracting:
         if _matches(keyword, searchable):
-            return "neutral"
+            return "very_distracting"
 
     return "uncategorized"

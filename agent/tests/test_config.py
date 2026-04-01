@@ -20,9 +20,10 @@ def test_load_config_from_file():
             "base_paths": ["~/projects"],
         },
         "categories": {
+            "very_productive": ["neovim"],
             "productive": ["code"],
-            "neutral": ["slack"],
-            "distracting": ["reddit.com"],
+            "distracting": ["slack"],
+            "very_distracting": ["reddit.com"],
         },
     }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
@@ -34,7 +35,7 @@ def test_load_config_from_file():
     assert config.server.loki_url == "http://localhost:3100"
     assert config.tracking.poll_interval_seconds == 5
     assert "~/projects" in config.projects.base_paths
-    assert "code" in config.categories.productive
+    assert "neovim" in config.categories.very_productive
 
 
 def test_load_config_defaults():
@@ -47,4 +48,26 @@ def test_load_config_defaults():
 
     assert config.tracking.poll_interval_seconds == 5
     assert config.tracking.idle_threshold_seconds == 300
-    assert config.categories.productive == []
+    assert config.categories.very_productive == []
+
+
+def test_load_config_five_level_categories():
+    raw = {
+        "server": {"loki_url": "http://localhost:3100", "mimir_url": "http://localhost:9009"},
+        "categories": {
+            "very_productive": ["code", "neovim"],
+            "productive": ["github.com"],
+            "distracting": ["slack"],
+            "very_distracting": ["reddit.com"],
+        },
+    }
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        yaml.dump(raw, f)
+        path = f.name
+
+    config = load_config(Path(path))
+
+    assert config.categories.very_productive == ["code", "neovim"]
+    assert config.categories.productive == ["github.com"]
+    assert config.categories.distracting == ["slack"]
+    assert config.categories.very_distracting == ["reddit.com"]
