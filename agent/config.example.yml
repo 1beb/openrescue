@@ -12,15 +12,22 @@ projects:
     - "~/projects"
     - "~/work"
 
+# Categories use a 5-level productivity scale.
+# Default rules are loaded from default_categories.yml.
+# Specifying a level here REPLACES the defaults for that level.
+# Omit a level to keep its defaults.
 categories:
-  productive:
+  very_productive:
     - "code"
     - "terminal"
+    - "neovim"
+  productive:
     - "github.com"
-  neutral:
-    - "slack"
-    - "email"
+    - "stackoverflow.com"
   distracting:
+    - "slack"
+    - "news.ycombinator.com"
+  very_distracting:
     - "reddit.com"
     - "youtube.com"
     - "twitter.com"
