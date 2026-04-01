@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from importlib.resources import files
 from pathlib import Path
 
 import yaml
@@ -37,6 +38,12 @@ class Config:
     categories: CategoriesConfig = field(default_factory=CategoriesConfig)
 
 
+def _load_default_categories() -> dict:
+    default_path = files("openrescue").joinpath("default_categories.yml")
+    with open(str(default_path)) as f:
+        return yaml.safe_load(f)
+
+
 def load_config(path: Path) -> Config:
     with open(path) as f:
         raw = yaml.safe_load(f)
@@ -44,6 +51,15 @@ def load_config(path: Path) -> Config:
     server = ServerConfig(**raw["server"])
     tracking = TrackingConfig(**raw.get("tracking", {}))
     projects = ProjectsConfig(**raw.get("projects", {}))
-    categories = CategoriesConfig(**raw.get("categories", {}))
+
+    defaults = _load_default_categories()
+    user_cats = raw.get("categories", {})
+    merged = {
+        "very_productive": user_cats.get("very_productive", defaults.get("very_productive", [])),
+        "productive": user_cats.get("productive", defaults.get("productive", [])),
+        "distracting": user_cats.get("distracting", defaults.get("distracting", [])),
+        "very_distracting": user_cats.get("very_distracting", defaults.get("very_distracting", [])),
+    }
+    categories = CategoriesConfig(**merged)
 
     return Config(server=server, tracking=tracking, projects=projects, categories=categories)
