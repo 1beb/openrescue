@@ -1,7 +1,9 @@
 import { getDb } from '@/lib/db'
-import { NextResponse } from 'next/server'
 
-export async function PUT(request: Request, { params }: { params: { deviceId: string; key: string } }) {
+import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
+
+export async function PUT(request: Request, { params }: { params: { id: string; key: string } }) {
   const body = await request.json()
   const { value } = body
 
@@ -13,7 +15,7 @@ export async function PUT(request: Request, { params }: { params: { deviceId: st
   db.prepare(`
     INSERT INTO settings (device_id, key, value) VALUES (?, ?, ?)
     ON CONFLICT(device_id, key) DO UPDATE SET value = ?
-  `).run(params.deviceId, params.key, String(value), String(value))
+  `).run(params.id, params.key, String(value), String(value))
 
   return NextResponse.json({ ok: true })
 }

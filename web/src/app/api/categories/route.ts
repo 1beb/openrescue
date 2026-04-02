@@ -1,5 +1,7 @@
 import { getDb } from '@/lib/db'
+
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 
 const VALID_CATEGORIES = ['very_productive', 'productive', 'distracting', 'very_distracting']
 
