@@ -1,8 +1,8 @@
 services:
   grafana:
     image: grafana/grafana:11.6.0
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -54,7 +54,22 @@ services:
       - mimir
     restart: unless-stopped
 
+  openrescue-web:
+    build: ../web
+    ports:
+      - "3001:3000"
+    environment:
+      - GRAFANA_URL=http://grafana:3000
+      - DATABASE_PATH=/data/settings.db
+      - TAILSCALE_AUTH_ENABLED=${TAILSCALE_AUTH_ENABLED:-false}
+    volumes:
+      - web-data:/data
+    depends_on:
+      - grafana
+    restart: unless-stopped
+
 volumes:
   grafana-data:
   loki-data:
   mimir-data:
+  web-data:
